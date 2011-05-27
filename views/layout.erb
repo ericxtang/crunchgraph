@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <title>Crunchgraph</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js" type="text/javascript"></script>
+    <script type="text/javascript" src="protovis-r3.2.js"></script>
+    <script type="text/javascript" src="simple.js"></script>
+    <script src="jquery.tipsy.js" type="text/javascript"></script>
+    <script src="tipsy.js" type="text/javascript"></script>
+    <link href="tipsy.css" type="text/css" rel="stylesheet"/>
+
+    <style type="text/css">
+#container
+{
+	margin: 0 auto;
+	width: 100%;
+	background: #fff;
+}
+
+#header
+{
+	background: #ccc;
+	padding: 20px;
+  height: 70px;
+}
+
+#header h1 { margin: 0; }
+
+#navigation
+{
+	float: left;
+	width: 100%;
+	background: #333;
+}
+
+#navigation ul
+{
+	margin: 0;
+	padding: 0;
+}
+
+#navigation ul li
+{
+	list-style-type: none;
+	display: inline;
+}
+
+#navigation li a
+{
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	color: #fff;
+	text-decoration: none;
+	border-right: 1px solid #fff;
+}
+
+#navigation li a:hover { background: #383; }
+
+#content-container
+{
+	float: left;
+	width: 100%;
+	#background: #FFF url(layout-two-liquid-background.gif) repeat-y 68% 0;
+}
+
+#content
+{
+	clear: left;
+	float: left;
+	width: 60%;
+	padding: 20px 0;
+	margin: 0 0 0 4%;
+	display: inline;
+}
+
+#content h2 { margin: 0; }
+
+#aside-container
+{
+  background: #C9D7D8;
+	float: left;
+	width: 21%;
+  height: 100%;
+
+}
+
+#aside-container h3 { margin: 0; }
+
+#aside
+{
+  padding: 20px 30px;
+}
+
+#footer
+{
+	clear: left;
+	background: #ccc;
+	text-align: right;
+	padding: 20px;
+	height: 1%;
+}
+
+
+.search {
+  float:left;
+	border: none;
+	width: 200px;
+	margin: 0 auto;
+}
+
+.search input, .search img{
+	border: none;
+	float: left;
+}
+.search input.box {
+	color: #fff;
+	font-size: 1.2em;
+	width: 100px;
+	height: 30px;
+	#padding: 8px 5px 0;
+	#background: #616161 url(search_bg.gif) no-repeat;
+	#margin-right: 5px;
+}
+.search input.box:focus {
+	#background: #616161 url(search_bg.gif) no-repeat left -38px;
+	outline: none;
+}
+
+
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <%= yield %>
+  </body>
+</html>
+

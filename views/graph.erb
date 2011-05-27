@@ -1,0 +1,151 @@
+<script type="text/javascript">
+    function search() {
+      var query = $("#search_box").val();
+      window.location.replace("http://localhost:9393/graph?q="+query)
+    }
+</script>
+
+<div id="header"><img src="logo.png" style="margin-left: 10px, margin-top: -5px"/></div>
+<div id="content-container">
+  <div id="aside-container" >
+    <div id="aside">
+      <h3>Search:</h3>
+        <div class="search">
+          <input id="search_box" class="box" type="text" />
+          <img src="search.png" onclick="search();" style="margin-left:10px"/>
+        </div>
+        <br style="clear:both" />
+
+      <h2 style="margin-top: 50px"><%=@entity["name"] ? @entity["name"] : "#{@entity["first_name"]} #{@entity["last_name"]}"%></h2>
+      <% if @entity["category_code"] %><div><b>Category:</b> <%= @entity["category_code"] %></div><% end %>
+      <% if @entity["crunchbase_url"] %><div><b>Link: <a target="_blank" href="<%=@entity["crunchbase_url"]%>"><%=@entity["crunchbase_url"]%></a></div><%end%>
+      <div><p><b>Node Count:</b> <%=@graph[:nodes].count%></p></div>
+      <div><p><b>Link Count:</b> <%=@graph[:links].count%></p></div>
+      <% if @hunch %>
+      <div><p><h3 style="margin-top:20px">Same Taste:</h3></div>
+        <% @hunch.each do |h| %>
+          <div style="margin-left: 20px"><p><b><%= h["name"] + ": " if h["name"]%></b><%=h["score"]%>%</p></div>
+        <% end %>
+      <% end %>
+
+
+    </div>
+  </div>
+
+  <div style="width:79%; float:left">
+
+  <script type="text/javascript+protovis">
+
+    var simple = <%= @graph.to_json %>
+
+    var w = document.body.clientWidth,
+        h = document.body.clientHeight,
+        colors = pv.Colors.category19();
+
+    var vis = new pv.Panel()
+        .def("i", simple.nodes.length - 1)
+        .width(w)
+        .height(h)
+        .fillStyle("white")
+        .event("mousedown", pv.Behavior.pan())
+        .event("mousewheel", pv.Behavior.zoom(6));
+
+
+    var force = vis.add(pv.Layout.Force)
+        .nodes(simple.nodes)
+        .links(simple.links)
+        .chargeConstant(-800)
+        .springLength(200 + (200 - 3 * simple.nodes.length))
+        .iterations(null)
+        .springDamping(0.05)
+        .dragConstant(0.05)
+        .chargeTheta(0);
+
+
+        //.nodes(miserables.nodes)
+        //.links(miserables.links);
+
+    function line_style(d) {
+      //if (d.id % 100) {
+      //  console.log(d) 
+      //}
+      //return "red"
+      //console.log(d)
+      //return vis.i() == d.target || vis.i() == d.source ? "red" : "grey"
+      return d.target_type == "person" ? "red" : "grey"
+    }
+
+    force.link.add(pv.Line)
+      //.strokeStyle("red")
+      .strokeStyle(function(d, l) (l.target == vis.i() || l.source == vis.i()) ? "red" : "grey")
+      .lineWidth(function(d, l) (l.target == vis.i() || l.source == vis.i()) ? 4 : 1)
+
+//line_style(d))
+      //.lineWidth(function(d) (vis.i() == this.data().source || vis.i() == this.data().source) ? 4 : 1)
+
+
+/*    force.node.add(pv.Dot)
+        .size(function(d) (d.linkDegree + 4) * Math.pow(this.scale, -1.5) * 10)
+        .fillStyle(function(d) d.fix ? "brown" : colors(d.group))
+        .strokeStyle(function() this.fillStyle().darker())
+        .lineWidth(0)
+        .title(function(d) d.name)
+          //.textAlign("center")
+        .event("mousedown", pv.Behavior.drag())
+        //.event("click", (function(x) x.fillStyle("red")))
+        .event("drag", force);
+*/
+    
+
+    function in_graph(node, i) {
+      for (link_count in simple.links) {
+        link = simple.links[link_count]
+        if (link.source == node && link.target == i || 
+            link.source == i && link.target == node) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function highlight_width(node)
+    {
+      return ((vis.i() == node.index) || (in_graph(vis.i(), node.index)) ? 4 : 1)
+    }
+
+    function highlight_color(node) {
+      return ((vis.i() == node.index) || (in_graph(vis.i(), node.index)) ? "red" : "grey")
+    }
+
+    force.node.add(pv.Image)
+        .url(function(d) d.image_url)
+        .width(function(d) d.image_width)
+        .height(function(d) d.image_height)
+        //.lineWidth(function(d) vis.i() == this.index ? 4 : 1)
+        .lineWidth(function() highlight_width(this))
+        .strokeStyle(function() highlight_color(this))
+        .text(function(d) d.name)
+        .event("click", function(d) window.location.replace("http://localhost:9393/graph?type=" + d.type + "&permalink="+d.permalink))
+        //.event("mouseover", highlight )
+        //.event("mouseout", function() this.parent.lineWidth(1) )
+        //.event("click", pv.Behavior.tipsy({gravity: "w", fade: true})
+        .event("mouseover", function() vis.i(this.index))
+        .event("mouseout", function() vis.i(-1))
+        //.event("mouseout", function() alert(this.data().name))
+        .event("mousedown", pv.Behavior.drag())
+        .event("drag", force)
+        //.anchor("right").add(pv.Label)
+          //.visible(function() this.anchorTarget().active() == this.index)
+          //.text(function(d) d.name);
+
+        //.add(pv.Label)
+          //.text(function(d) d.name)
+          //.textAlign("left")
+          //.font("20px sans-serif")
+
+
+    vis.render();
+
+  </script>
+  </div>
+</div>

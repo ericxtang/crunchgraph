@@ -1,0 +1,3 @@
+CrunchGraph is a visual representation of crunchbase.
+
+It uses protovis, mongodb and sinatra.
