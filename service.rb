@@ -8,6 +8,21 @@ require 'ruby-debug'
 
 $db = Mongo::Connection.new("localhost", 27017)["crunch_profile"]
 
+def parse_title(raw_title)
+  case raw_title
+  when /^board/i
+    "investor"
+  when /^director\s?$/i
+    "investor"
+  when /advisor/i
+    "investor"
+  when /investor/i
+    "investor"
+  else
+    "employee"
+  end
+end
+
 def create_graph(depth, entity_permalink, type)
   if type == "person"
     coll = $db["people"]
@@ -37,13 +52,13 @@ def create_graph(depth, entity_permalink, type)
 
   relationship_entities = other_coll.find("permalink" => {"$in" => entity["relationships"].collect{|rel| rel[other_coll_entity]["permalink"] }}).entries
   relationship_entities.each do |rel_ent|
-    links << {"source" => entity["permalink"], "source_type" => coll_entity, "target" => rel_ent["permalink"], "target_type" => other_coll_entity}
+    links << {"source" => entity["permalink"], "source_type" => coll_entity, "target" => rel_ent["permalink"], "target_type" => other_coll_entity, "link_type" => parse_title(rel_ent["title"])}
   end
 
   children_permalinks = relationship_entities.collect {|r_e| 
     r_e["relationships"].collect{|rel| 
       if r_e["relationships"]
-        links << {"source" => r_e["permalink"], "source_type" => other_coll_entity, "target" => rel[coll_entity]["permalink"], "target_type" => coll_entity}
+        links << {"source" => r_e["permalink"], "source_type" => other_coll_entity, "target" => rel[coll_entity]["permalink"], "target_type" => coll_entity, "link_type" => parse_title(rel["title"])}
         rel[coll_entity]["permalink"] 
       end
     }
@@ -68,7 +83,7 @@ def create_graph(depth, entity_permalink, type)
     nodes << e_hash
   end
 
-  nodes.each do |n| 
+  nodes.each do |n|
     area = 900 + [10000 - 900 - nodes.count * (10000 - 900) / 80, 0].max
     n["image_width"], n["image_height"] = dimensions_by_area(area, n["image_ratio"])
     #n["image_height"] = 30 + [(40 - nodes.count), 0].max
@@ -86,7 +101,11 @@ def create_graph(depth, entity_permalink, type)
 
   entity_hash["twitter_username"] = entity["twitter_username"] if coll_entity = "person" && entity["twitter_username"]
   nodes << entity_hash
-  {:nodes => nodes, :links => links }
+  if nodes.count < 150
+    {:nodes => nodes, :links => links }
+  else
+    {:error => "too many nodes"}
+  end
 
 =begin
   if depth == 1
@@ -181,10 +200,10 @@ get /graph/ do
   graph = {}
   if params["type"] == "person"
     graph = create_graph(1, params["permalink"], "person")
-    process_graph!(graph)
+    process_graph!(graph) if graph[:nodes] && graph[:links]
   elsif params["type"] == "firm"
     graph = create_graph(1, params["permalink"], "firm")
-    process_graph!(graph)
+    process_graph!(graph) if graph[:nodes] && graph[:links]
   else
   end
 
